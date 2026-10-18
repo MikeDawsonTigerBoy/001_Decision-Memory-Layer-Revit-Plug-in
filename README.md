@@ -1,85 +1,102 @@
 # 001 Decision Memory Layer
 
-A record of why design decisions were made on long building projects, kept next to the work itself. It works the way commit history works for code, but for architecture.
+A Revit plug-in connected to a web app. It records why major design decisions were made, linked to model elements and Design Options. It works the way commit history works for code, but for architecture.
 
 > **Draft for review.** Lines tagged *(proposed)* are Claude's suggestions, not yet agreed. Section 10 lists the questions to settle before building.
 
 ## Status
 
-An earlier web prototype exists, the Decision Timeline at decision-context-prototype.netlify.app, along with a Figma prototype. This repo is empty so far.
+- **Focus: active.** This is one of three featured prototypes, alongside 002 and 004.
+- An earlier web prototype exists, the Decision Timeline at decision-context-prototype.netlify.app, along with a Figma prototype.
+- **Code: none in this repo yet.**
 
 ## 1. Problem statement
 
-Building projects run for years and pass through many hands. The reasoning behind a decision ends up spread across emails, meeting minutes and people's memories: why a material was chosen, why an option was dropped, what the client agreed. When someone leaves, a client asks a question or a dispute comes up, teams re-argue settled decisions, repeat analysis or can't defend what was agreed.
+Building projects run for years and change hands. Projects stop and restart: one might sit frozen for two years, then come back to life with a new director and a new production team. The reasoning behind the current design is spread across emails, minutes and the memories of people who have since left.
+
+The new team has to retrace the decision tree to understand why the design looks the way it does. That's slow and expensive, and it risks undoing decisions that were made for good reasons.
 
 ## 2. Target audience
 
-- **Primary:** architects and project leads on multi-year projects.
-- **Secondary** *(proposed)*: BIM managers, client-side project managers, and anyone joining a project partway through.
+- **Primary:** directors, project architects and production teams who join, inherit or restart a long-running project.
+- **Secondary:** BIM managers and client-side project managers.
 
 ## 3. Value proposition
 
-Ask "why is it like this?" and get the answer in seconds. You see the decision, the options that were considered, who made it and when, all linked to the part of the model it affects.
+Open the model, select an element and see why it is the way it is: the decision, the options that were rejected, who decided and when. No retracing needed.
 
 ## 4. Core functionality
 
-*(proposed for v1)*
-- Log a decision with: what was decided, why, the options considered, who decided, the date and the source (a meeting or an email).
-- A timeline view of decisions across the project.
-- Search and filter by building element, discipline or stage.
-- Link a decision to a Revit element, view or sheet.
+**Revit plug-in**
+- Record a major decision while working in the model.
+- Link each decision to element IDs and to Design Options.
+- See the history of decisions on any selected element.
+
+**Web app**
+- A timeline of decisions across the project.
+- Search and filter.
+- Read access for people who don't use Revit.
+
+**Each decision record holds:** what was decided, why, the options considered, who decided, the date, and the source (a meeting, an email or a client instruction).
+
+**What gets logged:** major decisions only. The aim is to capture the turning points, not every change. Revit already tracks file changes; this records the reasoning behind them.
 
 ## 5. Key user journeys
 
-1. **Capture:** after a design meeting, the project lead logs three decisions in under two minutes.
-2. **Recall:** the client queries a façade change, so the architect selects the façade element and sees the full history of decisions on it.
-3. **Handover:** a new team member reads through the decision timeline on their first day.
+1. **Restart:** a project comes back after two years. The new director opens the web timeline and understands the 12 key decisions behind the current design in an hour.
+2. **Join:** a new team member selects the façade in Revit and sees why it's built the way it is.
+3. **Capture:** after a client meeting, the project architect logs a decision in Revit and links it to the affected elements and Design Option.
 
 ## 6. Non-goals
 
 *(proposed)*
 - Not a replacement for document control (Aconex, ACC), RFIs or issue tracking.
-- Not a meeting-minutes tool.
+- Not a log of every change.
 - Not a contract or claims system.
+- Medical, legal and finance are out of scope for v1.
 
 ## 7. Feasibility
 
-- A web app version is straightforward.
-- A Revit add-in means C#/.NET, Windows only, and the Revit API.
-- A mobile app (the portfolio default) can't run inside Revit.
+- **Revit add-in:**
+  - It's built in C#/.NET on Windows using the Revit API.
+  - The API exposes element IDs and Design Options.
+  - The add-in should link decisions to each element's `UniqueId`, not its `ElementId`. The ElementId can change when models are worked on in parallel or copied; the UniqueId stays stable.
+- **Web app:** straightforward to build. It needs a small backend so the Revit add-in and the web app share the same data.
+- **Mike's strength:** he has used Revit daily for a decade and has real projects to test against.
 
 ## 8. Assumptions and risks
 
 - **Biggest risk:** people won't log decisions. If capturing a decision takes effort, the log stays empty, as minutes often do.
-- **Assumption:** firms want this history kept. Some may prefer fewer written records because of liability.
-- **Risk:** it overlaps with what Autodesk Construction Cloud already does.
+- **Assumption:** firms want this history written down. Some may prefer fewer written records because of liability.
+- **Overlap:** Autodesk Construction Cloud partly covers similar ground.
+- **Model changes:** when elements are deleted or replaced, their links break. Decisions need to survive the element they were linked to.
 
 ## 9. Success metrics
 
 *(proposed)*
-- Decisions logged per active project each week.
-- The share of "why" questions answered from the log rather than from email searches.
-- Time to answer a "why" question, measured before and after.
+- Time for a new team member to answer "why is it like this?", measured before and after.
+- Decisions logged per active project each month.
+- The share of decisions still linked to a valid element after 6 months of model changes.
 
 ## 10. Open questions and challenges
 
-1. **What is it: a Revit plug-in, a web app or a phone app?**
-   - The repo name says Revit plug-in, the portfolio lists it as a phone app (Expo), and the existing prototype is a website.
-   - These are three different products, and settling this first avoids building the wrong one.
-2. **How do decisions get in with almost no effort?**
-   - The strongest AI angle is to pull candidate decisions out of meeting transcripts or email threads for a person to confirm, rather than asking people to type them in.
-   - This is the core of the product, not an extra feature.
-3. **Who pays, and who benefits?**
-   - The person logging (the architect) isn't always the person who benefits later (the firm, the client, a lawyer). How does the capturer get value at the moment they log?
-4. **Why not Autodesk Construction Cloud Issues or a shared spreadsheet?** What does this do that those can't?
-5. **Is it the centrepiece?** As the main piece in Mike's PM positioning, which one claim should this case study prove?
+1. **How do decisions get in with almost no effort?**
+   - The strongest AI angle is to suggest candidate decisions from meeting notes, emails or large model changes for a person to confirm.
+   - Without this, the product relies on discipline that busy teams don't have.
+2. **What counts as "major"?** A clear rule decides whether the log is useful or noisy. For example: anything signed off by the client, anything that changes cost, or anything that closes off an option.
+3. **Who benefits at the moment of logging?** The architect who logs the decision rarely benefits later. What's in it for them today? For example, a quick record that covers them if the client queries it.
+4. **Which comes first, the plug-in or the web app?** A web-only v1 with element IDs pasted in by hand would test the idea in days rather than weeks.
+5. **Other domains (medical, legal, financial) are a strong part of the pitch,** for example "Why was a portfolio rebalanced?" Keep them as the vision, not the v1 scope. Each one is regulated and has its own tools and buyers.
 
 ## 11. Tech approach
 
-To be decided, depending on the answer to question 1. Starting from a web prototype is fastest; the Revit add-in would come later.
+- **Revit add-in:** C#/.NET, Revit API, Windows.
+- **Web app:** React, with a shared backend API and database.
+- **Portfolio:** the web app runs in the phone frames, and the Revit side gets a video demo.
 
 ## 12. Roadmap
 
 - **v0 (done):** Netlify prototype and Figma prototype.
-- **v1:** decide the format, then build the capture and recall flows.
-- **Later:** a Revit add-in and AI extraction of decisions from meetings and email.
+- **v1:** web app with manual element IDs, plus capture and recall flows.
+- **v2:** Revit add-in that links to `UniqueId` and Design Options.
+- **Later:** AI suggestions for decisions, then other domains.
